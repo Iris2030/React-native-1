@@ -62,7 +62,7 @@ const LoginScreen = () => {
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <View style={{ flex: 1 }}>
         <Image
-          source={require("../assets/images/3060bf968d92368179ce26a756ce4271.jpeg")}
+          source={require("../assets/images/3060bf968d92368179ce26a756ce4271.381b31bca8f24ba93fc61c3d69aef57f.jpeg")}
           resizeMode="cover"
           style={styles.image}
         />
