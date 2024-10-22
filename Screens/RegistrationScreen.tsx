@@ -9,17 +9,44 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   Animated,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import { colors } from "../styles/global";
+import Input from "../components/input";
 
 const RegistrationScreen = () => {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [buttonRotation, setButtonRotation] = useState(new Animated.Value(0));
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isUsernameFocused, setIsUsernameFocused] = useState(false);
+  const [isEmailFocused, setIsEmailFocused] = useState(false);
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+
+  const onSignUp = () => {
+    console.log("Username:", username);
+    console.log("Email:", email);
+    console.log("Password:", password);
+
+    setUsername("");
+    setEmail("");
+    setPassword("");
+  };
 
   const dismissKeyboard = () => {
     Keyboard.dismiss();
   };
+
+  const onUsernameFocus = () => setIsUsernameFocused(true);
+  const onUsernameBlur = () => setIsUsernameFocused(false);
+  const onEmailFocus = () => setIsEmailFocused(true);
+  const onEmailBlur = () => setIsEmailFocused(false);
+  const onPasswordFocus = () => setIsPasswordFocused(true);
+  const onPasswordBlur = () => setIsPasswordFocused(false);
 
   const selectImage = async () => {
     const permissionResult =
@@ -63,84 +90,111 @@ const RegistrationScreen = () => {
 
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
-      <View style={styles.container}>
+      <View style={{ flex: 1 }}>
         <Image
           source={require("../assets/images/3060bf968d92368179ce26a756ce4271.jpeg")}
           style={styles.backgroundImage}
         />
 
-        <View style={styles.formContainer}>
-          <View style={styles.profileImageContainer}>
-            {profileImage ? (
-              <Image
-                source={{ uri: profileImage }}
-                style={styles.profileImage}
-              />
-            ) : (
-              <View style={styles.placeholder} />
-            )}
-            <TouchableOpacity
-              style={[styles.addButton,
-                {
+        <KeyboardAvoidingView
+          style={styles.container}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <View style={styles.formContainer}>
+            <View style={styles.profileImageContainer}>
+              {profileImage ? (
+                <Image
+                  source={{ uri: profileImage }}
+                  style={styles.profileImage}
+                />
+              ) : (
+                <View style={styles.placeholder} />
+              )}
+              <TouchableOpacity
+                style={[
+                  styles.addButton,
+                  {
                     borderColor: profileImage ? "#E8E8E8" : "#FF6C00",
                   },
-              ]}
-              onPress={profileImage ? removeImage : selectImage}
-            >
-              <Animated.Text
-                style={[
-                  styles.addButtonText,
-                  {
-                    transform: [{ rotate: interpolatedRotation }],
-                    color: profileImage ? "#E8E8E8" : "#FF6C00",
-                    top:  profileImage ? -5 : -6,
-                    left: profileImage ? 6 : 5,
-                  },
                 ]}
+                onPress={profileImage ? removeImage : selectImage}
               >
-                +
-              </Animated.Text>
-            </TouchableOpacity>
-          </View>
+                <Animated.Text
+                  style={[
+                    styles.addButtonText,
+                    {
+                      transform: [{ rotate: interpolatedRotation }],
+                      color: profileImage ? "#E8E8E8" : "#FF6C00",
+                      top: profileImage ? -5 : -6,
+                      left: profileImage ? 6 : 5,
+                    },
+                  ]}
+                >
+                  +
+                </Animated.Text>
+              </TouchableOpacity>
+            </View>
 
-          <Text style={styles.headerText}>Реєстрація</Text>
+            <Text style={styles.headerText}>Реєстрація</Text>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Логін"
-            placeholderTextColor="#BDBDBD"
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Адреса електронної пошти"
-            keyboardType="email-address"
-            placeholderTextColor="#BDBDBD"
-          />
-          <View style={styles.passwordContainer}>
             <TextInput
-              style={styles.passwordInput}
-              placeholder="Пароль"
-              secureTextEntry={!passwordVisible}
+              style={[
+                styles.input,
+                isUsernameFocused ? styles.focused : styles.input,
+              ]}
+              placeholder="Логін"
               placeholderTextColor="#BDBDBD"
+              onFocus={onUsernameFocus}
+              onBlur={onUsernameBlur}
+              onChangeText={setUsername}
+              value={username}
             />
-            <TouchableOpacity
-              style={styles.toggleButton}
-              onPress={() => setPasswordVisible(!passwordVisible)}
-            >
-              <Text style={styles.toggleText}>
-                {passwordVisible ? "Приховати" : "Показати"}
-              </Text>
+            <TextInput
+              style={[
+                styles.input,
+                isEmailFocused ? styles.focused : styles.input,
+              ]}
+              placeholder="Адреса електронної пошти"
+              keyboardType="email-address"
+              placeholderTextColor="#BDBDBD"
+              onFocus={onEmailFocus}
+              onBlur={onEmailBlur}
+              onChangeText={setEmail}
+              value={email}
+            />
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={[
+                  styles.passwordInput,
+                  isPasswordFocused ? styles.focused : styles.passwordInput,
+                ]}
+                placeholder="Пароль"
+                secureTextEntry={!passwordVisible}
+                placeholderTextColor="#BDBDBD"
+                onFocus={onPasswordFocus}
+                onBlur={onPasswordBlur}
+                onChangeText={setPassword}
+                value={password}
+              />
+              <TouchableOpacity
+                style={styles.toggleButton}
+                onPress={() => setPasswordVisible(!passwordVisible)}
+              >
+                <Text style={styles.toggleText}>
+                  {passwordVisible ? "Приховати" : "Показати"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity style={styles.registerButton} onPress={onSignUp}>
+              <Text style={styles.registerButtonText}>Зареєструватися</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity>
+              <Text style={styles.loginLink}>Вже є акаунт? Увійти</Text>
             </TouchableOpacity>
           </View>
-
-          <TouchableOpacity style={styles.registerButton}>
-            <Text style={styles.registerButtonText}>Зареєструватися</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity>
-            <Text style={styles.loginLink}>Вже є акаунт? Увійти</Text>
-          </TouchableOpacity>
-        </View>
+        </KeyboardAvoidingView>
       </View>
     </TouchableWithoutFeedback>
   );
@@ -151,6 +205,10 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+  },
+  focused: {
+    backgroundColor: colors.white,
+    borderColor: colors.orange,
   },
   backgroundImage: {
     position: "absolute",
@@ -190,7 +248,7 @@ const styles = StyleSheet.create({
     width: 120,
     backgroundColor: "#F6F6F6",
     borderRadius: 20,
-    padding: 16,
+    paddingHorizontal: 16,
     alignItems: "center",
   },
   addButton: {
