@@ -14,7 +14,6 @@ import {
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { colors } from "../styles/global";
-import Input from "../components/input";
 
 const RegistrationScreen = () => {
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -308,7 +307,7 @@ const styles = StyleSheet.create({
     top: 15,
   },
   toggleText: {
-    color: "blue",
+    color: "#1B4371",
     fontSize: 14,
   },
   registerButton: {

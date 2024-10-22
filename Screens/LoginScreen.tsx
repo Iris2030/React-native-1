@@ -13,7 +13,7 @@ import {
   View,
 } from "react-native";
 import { colors } from "../styles/global";
-import Input from "../components/input";
+import Input from "../components/Input";
 import Button from "../components/Button";
 import { useFocusEffect, useIsFocused } from "@react-navigation/native";
 
