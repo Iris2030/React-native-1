@@ -102,7 +102,7 @@ const ProfileScreen = () => {
 					<View style={styles.formContainer}>
 						<View style={styles.profileImageContainer}>
 							<Image
-								source={require("../assets/images/Avatar.jpg")}
+								source={require("../assets/images/avatar.jpg")}
 								style={styles.profileImage}
 							/>
 							<TouchableOpacity
