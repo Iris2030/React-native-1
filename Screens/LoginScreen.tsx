@@ -1,75 +1,106 @@
-import { useCallback, useEffect, useState } from "react";
-import {
-  Alert,
-  Dimensions,
-  Image,
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  View,
-} from "react-native";
+import { FC, useCallback, useEffect, useState } from "react";
+import { Alert, Dimensions, Image, Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
 import { colors } from "../styles/global";
 import Input from "../components/Input";
 import Button from "../components/Button";
 import { useFocusEffect, useIsFocused } from "@react-navigation/native";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { StackParamList } from "../navigation/StackNavigator";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("screen");
 
-const LoginScreen = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [passwordVisible, setPasswordVisible] = useState(false);
+type LoginScreenProps = NativeStackScreenProps<StackParamList, 'Login'>;
+
+const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isPasswordVisible, setIsPasswordVisible] = useState(true);
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [isEmailWrongs, setIsEmailWrongs] = useState(false); 
+  const [isPasswordWrongs, setIsPasswordWrongs] = useState(false); 
+
+
+  const validateEmail = (email: string) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
 
   const handleEmailChange = (value: string) => {
     setEmail(value);
+    setEmailError('');
+    setIsEmailWrongs(false);
+  };
+
+  const handleEmailBlur = () => {
+    if (!validateEmail(email)) {
+      setEmailError('Невірний формат електронної пошти');
+      setIsEmailWrongs(true); 
+    }
   };
 
   const handlePasswordChange = (value: string) => {
     setPassword(value);
+    if (!value) {
+      setPasswordError('Пароль не може бути пустим');
+      setIsPasswordWrongs(true)
+    } else {
+      setPasswordError('');
+      setIsPasswordWrongs(false)
+    }
+  };
+
+  const handlePasswordBlur = () => {
+    
+    if (!password) {
+      setPasswordError('Пароль не може бути пустим');
+      setIsPasswordWrongs(true)
+    }
   };
 
   const showPassword = () => {
-    setPasswordVisible((prev) => !prev);
-  };
-
-  const dismissKeyboard = () => {
-    Keyboard.dismiss();
+    setIsPasswordVisible(prev => !prev);
   };
 
   const onLogin = () => {
-    console.log("Email:", email);
-    console.log("Password:", password);
-
-    setPassword('')
-    setEmail('')
+    if (validateEmail(email) && password) {
+      navigation.navigate('Home');
+    } else {
+      if (!validateEmail(email)) {
+        setEmailError('Невірний формат електронної пошти');
+        setIsEmailWrongs(true)
+      }
+      if (!password) {
+        setPasswordError('Пароль не може бути пустим');
+        setIsPasswordWrongs(true)
+      }
+    }
   };
 
   const onSignUp = () => {
-    console.log("sign up");
+    navigation.navigate("Signup", { userEmail: email });
   };
 
   const showButton = (
     <TouchableOpacity onPress={showPassword}>
-      <Text style={[styles.baseText, styles.passwordButtonText]}>{passwordVisible ? "Приховати" : "Показати"}</Text>
+      <Text style={[styles.baseText, styles.passwordButtonText]}>
+        Показати
+      </Text>
     </TouchableOpacity>
   );
 
   return (
-    <TouchableWithoutFeedback onPress={dismissKeyboard}>
-      <View style={{ flex: 1 }}>
+    <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
+      <>
         <Image
-          source={require("../assets/images/3060bf968d92368179ce26a756ce4271.jpeg")}
+          source={require("../assets/images/background.jpeg")}
           resizeMode="cover"
           style={styles.image}
         />
 
         <KeyboardAvoidingView
           style={styles.container}
-          behavior={Platform.OS == "ios" ? "padding" : "height"}
+          behavior={Platform.OS === "ios" ? 'padding' : 'height'}
         >
           <View style={styles.formContainer}>
             <Text style={styles.title}>Увійти</Text>
@@ -77,9 +108,13 @@ const LoginScreen = () => {
             <View style={[styles.innerContainer, styles.inputContainer]}>
               <Input
                 value={email}
+                autofocus={true}
                 placeholder="Адреса електронної пошти"
                 onTextChange={handleEmailChange}
+                onBlur={handleEmailBlur}  
+                isEmailWrongs={isEmailWrongs}
               />
+              {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
               <Input
                 value={password}
@@ -87,9 +122,11 @@ const LoginScreen = () => {
                 rightButton={showButton}
                 outerStyles={styles.passwordButton}
                 onTextChange={handlePasswordChange}
-                secureTextEntry={passwordVisible}
+                onBlur={handlePasswordBlur}  
+                secureTextEntry={isPasswordVisible}
+                isPasswordWrongs={isPasswordWrongs}
               />
-
+              {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
             </View>
 
             <View style={[styles.innerContainer, styles.buttonContainer]}>
@@ -110,7 +147,7 @@ const LoginScreen = () => {
             </View>
           </View>
         </KeyboardAvoidingView>
-      </View>
+      </>
     </TouchableWithoutFeedback>
   );
 };
@@ -177,5 +214,10 @@ const styles = StyleSheet.create({
   },
   signUpText: {
     textDecorationLine: "underline",
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginTop: 4,
   },
 });

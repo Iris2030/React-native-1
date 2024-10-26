@@ -1,14 +1,16 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import RegistrationScreen from '../../Screens/RegistrationScreen';
-import LoginScreen from '../../Screens/LoginScreen';
+import { NavigationContainer } from '@react-navigation/native';
+import HomeScreen from '../../Screens/HomeScreen';
+import BottomTabNavigator from '@/navigation/BottomTabNavigator';
+import StackNavigator from '@/navigation/StackNavigator';
 
-export default function HomeScreen() {
+export default function App() {
   return (
-    <View style={styles.container}>
-      <RegistrationScreen />
-      {/* <LoginScreen /> */}
-    </View>
+    <NavigationContainer independent={true}>
+      <StackNavigator/>
+      {/* <BottomTabNavigator/> */}
+    </NavigationContainer>
   );
 }
 

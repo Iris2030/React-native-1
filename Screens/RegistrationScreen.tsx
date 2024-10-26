@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { FC, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -14,8 +14,13 @@ import {
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { colors } from "../styles/global";
+import { NativeStackScreenProps } from "react-native-screens/lib/typescript/native-stack/types";
+import { StackParamList } from "../navigation/StackNavigator";
+import Input from "../components/Input";
 
-const RegistrationScreen = () => {
+type HomeScreenProps = NativeStackScreenProps<StackParamList, 'Signup'>;
+
+  const RegistrationScreen:  FC<HomeScreenProps> = ({navigation, route}) => {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [buttonRotation, setButtonRotation] = useState(new Animated.Value(0));
@@ -25,7 +30,10 @@ const RegistrationScreen = () => {
   const [isUsernameFocused, setIsUsernameFocused] = useState(false);
   const [isEmailFocused, setIsEmailFocused] = useState(false);
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
-
+  const [isPasswordVisible, setIsPasswordVisible] = useState(true);
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [hasError, setHasError] = useState(false); 
   const onSignUp = () => {
     console.log("Username:", username);
     console.log("Email:", email);
@@ -34,6 +42,43 @@ const RegistrationScreen = () => {
     setUsername("");
     setEmail("");
     setPassword("");
+  };
+
+  const validateEmail = (email: string) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
+
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+    setEmailError('');
+    setHasError(false);
+  };
+
+  const handleEmailBlur = () => {
+    if (!validateEmail(email)) {
+      setEmailError('Невірний формат електронної пошти');
+      setHasError(true); 
+    }
+  };
+
+  const handlePasswordChange = (value: string) => {
+    setPassword(value);
+    if (!value) {
+      setPasswordError('Пароль не може бути пустим');
+      setHasError(true)
+    } else {
+      setPasswordError('');
+      setHasError(false)
+    }
+  };
+
+  const handlePasswordBlur = () => {
+    
+    if (!password) {
+      setPasswordError('Пароль не може бути пустим');
+      setHasError(true)
+    }
   };
 
   const dismissKeyboard = () => {
@@ -87,11 +132,15 @@ const RegistrationScreen = () => {
     outputRange: ["0deg", "43deg"],
   });
 
+  const onLogIn = () => {
+    navigation.navigate('Login');
+  };
+
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <View style={{ flex: 1 }}>
         <Image
-          source={require("../assets/images/3060bf968d92368179ce26a756ce4271.jpeg")}
+          source={require("../assets/images/background.jpeg")}
           style={styles.backgroundImage}
         />
 
@@ -189,7 +238,7 @@ const RegistrationScreen = () => {
               <Text style={styles.registerButtonText}>Зареєструватися</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity>
+            <TouchableOpacity onPress={onLogIn}>
               <Text style={styles.loginLink}>Вже є акаунт? Увійти</Text>
             </TouchableOpacity>
           </View>
@@ -327,6 +376,11 @@ const styles = StyleSheet.create({
   loginLink: {
     color: "#1B4371",
     textDecorationLine: "none",
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginTop: 4,
   },
 });
 

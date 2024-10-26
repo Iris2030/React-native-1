@@ -10,6 +10,9 @@ type InputProps = {
   onTextChange: (value: string) => void,
   secureTextEntry?: boolean,
   autofocus?: boolean,
+  isEmailWrongs?: boolean,
+  isPasswordWrongs?: boolean,
+  onBlur?: () => void,  
 }
 
 const Input: FC<InputProps> = ({
@@ -20,6 +23,9 @@ const Input: FC<InputProps> = ({
   rightButton,
   autofocus = false,
   secureTextEntry = false,
+  isPasswordWrongs,
+  isEmailWrongs,
+  onBlur,  
 }) => {
   const [isFocused, setIsFocused] = useState(false);
 
@@ -27,12 +33,13 @@ const Input: FC<InputProps> = ({
     setIsFocused(true);
   };
 
-  const onBlur = () => {
+  const onBlurHandler = () => {
     setIsFocused(false);
+    if (onBlur) onBlur();  
   };
 
   return (
-    <View style={[styles.input, isFocused && styles.focused, outerStyles]}>
+    <View style={[styles.input, (isEmailWrongs || isPasswordWrongs) && styles.inputError, isFocused && styles.focused, outerStyles]}>
       <TextInput
         value={value}
         autoFocus={autofocus}
@@ -42,7 +49,7 @@ const Input: FC<InputProps> = ({
         style={styles.baseText}
         autoCapitalize="none"
         onFocus={onFocus}
-        onBlur={onBlur}
+        onBlur={onBlurHandler} // Call onBlurHandler on blur
       />
 
       {rightButton}
@@ -68,7 +75,11 @@ const styles = StyleSheet.create({
   focused: {
     backgroundColor: colors.white,
     borderColor: colors.orange,
-  }
+  },
+  inputError: {
+    borderColor: 'red',
+    borderWidth: 1,
+  },
 })
 
 export default Input;
