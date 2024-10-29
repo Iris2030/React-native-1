@@ -8,8 +8,8 @@ import StackNavigator from '@/navigation/StackNavigator';
 export default function App() {
   return (
     <NavigationContainer independent={true}>
-      <StackNavigator/>
-      {/* <BottomTabNavigator/> */}
+      {/* <StackNavigator/> */}
+      <BottomTabNavigator/>
     </NavigationContainer>
   );
 }

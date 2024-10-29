@@ -1,5 +1,6 @@
 import { FC, useCallback, useEffect, useState } from "react";
 import {
+    TouchableOpacity,
     Dimensions,
     Image,
     Keyboard,
@@ -14,6 +15,7 @@ import CommentIcon from "@/icons/CommentIcon";
 import LocationIcon from "@/icons/LocationIcon";
 import CommentOrangeIcon from "@/icons/CommentOrangeIcon";
 const { width: SCREEN_WIDTH } = Dimensions.get("screen");
+import { useNavigation } from '@react-navigation/native';
 
 const posts = [
     {
@@ -26,11 +28,22 @@ const posts = [
         image: require("../assets/images/forest.jpeg"),
         likes: 5,
         comments: 5,
-        location: "Ivano-Frankivs'k Region, Ukraine"
+        location: "Софіївська вулиця, Кременчук, Полтавська область, Україна"
     },
 ];
 
 const PostsScreen = () => {
+
+    const navigation = useNavigation();
+
+    const goToComments = ( ) => {
+        navigation.navigate('Comments');
+    }
+
+    const goToMap = (location: string) => {
+        console.log(location,'location');
+        navigation.navigate('Map', { location });
+    }
     return (
         <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
             <ScrollView
@@ -57,16 +70,16 @@ const PostsScreen = () => {
                         <Text style={styles.postName}>Захід сонця</Text>
 
                         <View style={styles.postDetails}>
-                            <View style={styles.commentsContainer}>
+                            <TouchableOpacity style={styles.commentsContainer} onPress={goToComments}>
                                 {post.comments ? <CommentOrangeIcon /> : <CommentIcon />}
                                 <Text style={[styles.postComments, {
                                     color: post.comments ? '#212121' : '#BDBDBD'
                                 }]}>{post.comments}</Text>
-                            </View>
-                            <View style={styles.commentsContainer}>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.locationContainer} onPress={() => goToMap(post.location)}>
                                 <LocationIcon />
                                 <Text style={styles.postLocation}>{post.location}</Text>
-                            </View>
+                            </TouchableOpacity>
                         </View>
                     </View>
                 ))}
@@ -129,6 +142,11 @@ const styles = StyleSheet.create({
     commentsContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+    },
+    locationContainer:{
+        flexDirection: 'row',
+        alignItems: 'center',
+        maxWidth: 300
     },
     postComments: {
         color: '#BDBDBD',

@@ -3,6 +3,7 @@ import { View, StyleSheet } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MapScreen from "../Screens/MapScreen";
 import HomeScreen from "@/Screens/HomeScreen";
+import CameraScreen from "@/Screens/CameraScreen";
 import CommentsScreen from "@/Screens/CommentsScreen";
 import CreatePostsScreen from "@/Screens/CreatePostsScreen";
 import LogoutIcon from "@/icons/LogOutIcon";
@@ -11,7 +12,16 @@ import UserIcon from "@/icons/UserIcon";
 import BackButton from "../components/BackButton";
 import PfofileScreen from "@/Screens/ProfileScreen";
 
-const Tab = createBottomTabNavigator();
+type BottomTabParamList = {
+	Home: undefined;
+	CreatePosts: undefined;
+	Profile: undefined;
+	Map: undefined;
+	Camera: undefined;
+	Comments: undefined;
+};
+
+const Tab = createBottomTabNavigator<BottomTabParamList>();
 
 const BottomTabNavigator = () => {
 	return (
@@ -22,6 +32,11 @@ const BottomTabNavigator = () => {
 				headerLeftContainerStyle: { paddingLeft: 16 },
 				tabBarLabel: "",
 				tabBarStyle: { paddingBottom: 9 },
+				headerLeft: () => (
+					<BackButton
+						onPress={() => navigation.goBack()}
+					/>
+				),
 			})}
 		>
 
@@ -31,6 +46,7 @@ const BottomTabNavigator = () => {
 				options={{
 					title: "Публікації",
 					headerRight: () => <LogoutIcon />,
+					headerLeft: () => null, 
 					tabBarIcon: ({ focused }) => (
 						<View >
 							<BlocksIcon />
@@ -45,6 +61,7 @@ const BottomTabNavigator = () => {
 				options={({ navigation }) => ({
 					title: "Cтворити публікаці",
 					headerLeft: () => <BackButton onPress={() => navigation.goBack()} />,
+					tabBarStyle: { display: "none" },
 					tabBarIcon: ({ focused }) => (
 						<View style={styles.activeTabIcon}>
 							<Ionicons
@@ -71,6 +88,27 @@ const BottomTabNavigator = () => {
 					),
 				}}
 			/>
+
+			<Tab.Screen
+				name="Map"
+				component={MapScreen}
+				options={{
+					title: "Map",
+					headerShown: false,
+					tabBarButton: () => null,
+				}}
+			/>
+
+			<Tab.Screen
+				name="Comments"
+				component={CommentsScreen}
+				options={({ navigation }) => ({
+					title: "Коментарі",
+					headerLeft: () => <BackButton onPress={() => navigation.goBack()} />,
+					tabBarButton: () => null,
+				})}
+			/>
+
 		</Tab.Navigator>
 	);
 };
