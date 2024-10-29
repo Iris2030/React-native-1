@@ -60,6 +60,7 @@ const MapScreen: React.FC<MapScreenProps> = ({ route }) => {
           latitudeDelta: 0.0922,
           longitudeDelta: 0.0421,
         }}
+        minZoomLevel={15}
         showsUserLocation={true}
         onMapReady={() => console.log("Map is ready")}
         onRegionChange={() => console.log("Region change")}
