@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import {
     TouchableOpacity,
     Dimensions,
@@ -11,39 +11,44 @@ import {
     ScrollView,
 } from "react-native";
 import { colors } from "../styles/global";
-import CommentIcon from "@/icons/CommentIcon";
-import LocationIcon from "@/icons/LocationIcon";
-import CommentOrangeIcon from "@/icons/CommentOrangeIcon";
+import CommentIcon from "../icons/CommentIcon";
+import LocationIcon from "../icons/LocationIcon";
+import CommentOrangeIcon from "../icons/CommentOrangeIcon";
+import { db } from '../newConfig'; 
+import { collection, getDocs } from "firebase/firestore"; 
+
 const { width: SCREEN_WIDTH } = Dimensions.get("screen");
 import { useNavigation } from '@react-navigation/native';
 
-const posts = [
-    {
-        image: require("../assets/images/sunset.jpeg"),
-        likes: 10,
-        comments: 0,
-        location: "Ivano-Frankivs'k Region, Ukraine"
-    },
-    {
-        image: require("../assets/images/forest.jpeg"),
-        likes: 5,
-        comments: 5,
-        location: "Софіївська вулиця, Кременчук, Полтавська область, Україна"
-    },
-];
-
-const PostsScreen = () => {
-
+const PostsScreen: FC = () => {
     const navigation = useNavigation();
+    const [posts, setPosts] = useState<any[]>([]);  
+    
+    // Function to fetch posts from Firestore
+    const fetchPosts = async () => {
+        try {
+            const postsCollection = collection(db, "posts"); // Reference to your posts collection
+            const snapshot = await getDocs(postsCollection); // Fetch documents
+            const fetchedPosts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); // Map documents to post objects
+            setPosts(fetchedPosts); // Update state with fetched posts
+        } catch (error) {
+            console.error("Error fetching posts: ", error);
+        }
+    };
 
-    const goToComments = ( ) => {
+    useEffect(() => {
+        fetchPosts(); // Call the fetch function on component mount
+    }, []);
+
+    const goToComments = () => {
         navigation.navigate('Comments');
-    }
+    };
 
     const goToMap = (location: string) => {
-        console.log(location,'location');
+        console.log(location, 'location');
         navigation.navigate('Map', { location });
-    }
+    };
+
     return (
         <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
             <ScrollView
@@ -62,12 +67,12 @@ const PostsScreen = () => {
                 </View>
 
                 {posts.map((post, index) => (
-                    <View key={index} style={styles.PostContainer}>
+                    <View key={post.id} style={styles.PostContainer}>
                         <Image
-                            source={post.image}
+                            source={{ uri: post.capturedImage }} // Assuming capturedImage is a URL
                             style={styles.postImage}
                         />
-                        <Text style={styles.postName}>Захід сонця</Text>
+                        <Text style={styles.postName}>{post.name}</Text>
 
                         <View style={styles.postDetails}>
                             <TouchableOpacity style={styles.commentsContainer} onPress={goToComments}>

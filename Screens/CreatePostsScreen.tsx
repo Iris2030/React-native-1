@@ -17,12 +17,17 @@ import { useNavigation } from '@react-navigation/native';
 import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
 import * as MediaLibrary from "expo-media-library";
 import { colors } from "../styles/global";
-import CameraIcon from "@/icons/CameraIcon";
-import LocationIcon from "@/icons/LocationIcon";
+import CameraIcon from "../icons/CameraIcon";
+import LocationIcon from "../icons/LocationIcon";
 import * as Location from 'expo-location';
-import TrashIcon from "@/icons/TrashIcon";
-
+import TrashIcon from "../icons/TrashIcon";
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "../newConfig";
+import { addPost } from '../redux/reducers/postSlice'
+import {createPost} from '../utils/firestore'
 const { width: SCREEN_WIDTH } = Dimensions.get("screen");
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../redux/store/store";
 
 const CreatePostsScreen: FC = () => {
 	const [isActiveBtn, setIsActiveBtn] = useState(false);
@@ -34,9 +39,10 @@ const CreatePostsScreen: FC = () => {
 	const [location, setLocation] = useState<string>("");
 	const [errorMsg, setErrorMsg] = useState("");
 	const [address, setAddress] = useState(null);
+	const userInfo = useSelector((state: RootState) => state.user.userInfo);
 
 	const camera = useRef();
-
+	const dispatch = useDispatch();  // Initialize Redux dispatch
 	const navigation = useNavigation();
 
 	useEffect(() => {
@@ -55,7 +61,6 @@ const CreatePostsScreen: FC = () => {
 	useEffect(() => {
 		return () => {
 			setCapturedImage(null)
-
 		}
 	}, [])
 
@@ -81,10 +86,6 @@ const CreatePostsScreen: FC = () => {
 		);
 	}
 
-	// function toggleCameraFacing() {
-	// 	setFacing(current => (current === 'back' ? 'front' : 'back'));
-	// };
-
 	const takePhoto = async () => {
 		if (!camera) return;
 		const image = await camera?.current?.takePictureAsync();
@@ -95,33 +96,60 @@ const CreatePostsScreen: FC = () => {
 	const dismissKeyboard = () => {
 		Keyboard.dismiss();
 	};
-
-	const handlePublish = async () => {
-		if (location) {
-			const { latitude, longitude } = location.coords;
-
-			let reverseGeocode = await Location.reverseGeocodeAsync({
-				latitude,
-				longitude,
-			});
-
-			if (reverseGeocode.length > 0) {
-				const { city, region, country, street } = reverseGeocode[0];
-				const currentLocation = `${street}, ${city}, ${region}, ${country}`;
-				setAddress(currentLocation);
-				console.log(address);
-			}
-			navigation.navigate('Home');
-		} else {
-			console.log("Location not available");
-		}
-	};
-	 const handleClear = () => {
+	const handleClear = () => {
 		setLocationName("")
 		setCapturedImage(null)
 		setName("")
 		setIsActiveBtn(false)
-	 }
+	}
+
+	const handlePublishAndSavePost = async () => {
+		if (location) {
+			const { latitude, longitude } = location.coords;
+	
+			// Reverse geocode to get the address
+			let reverseGeocode = await Location.reverseGeocodeAsync({
+				latitude,
+				longitude,
+			});
+	
+			if (reverseGeocode.length > 0) {
+				const { city, region, country, street } = reverseGeocode[0];
+				const currentLocation = `${street}, ${city}, ${region}, ${country}`;
+				setAddress(currentLocation);
+	
+				// Prepare post data
+				const postData = {
+					id: Date.now().toString(), // Generates a unique ID for the post
+					name,
+					locationName,
+					capturedImage,
+					location: currentLocation,
+					latitude,
+					longitude,
+				};
+	
+				try {
+					// Use createPost to save the post data
+					await createPost(userInfo.uid, postData);  
+					console.log("Post successfully created!");
+	
+					// Dispatch the post data to Redux
+					dispatch(addPost(postData));  // Make sure the addPost action is imported
+	
+					// Navigate back to the home screen or a success screen
+					navigation.navigate('Home');
+				} catch (error) {
+					console.error("Error creating post: ", error);
+				}
+	
+			} else {
+				console.log("Reverse geocode failed. No address found.");
+			}
+		} else {
+			console.log("Location not available");
+		}
+	};
 
 	return (
 		<TouchableWithoutFeedback onPress={dismissKeyboard}>
@@ -174,20 +202,19 @@ const CreatePostsScreen: FC = () => {
 					</View>
 
 					<TouchableOpacity
-						onPress={handlePublish}
+						onPress={handlePublishAndSavePost}  // Save post when published
 						style={[isActiveBtn ? styles.registerButton : styles.registerButtonDisabled]}>
 						<Text style={[isActiveBtn ? styles.registerButtonText : styles.registerButtonTextDisabled]}>
 							Опублікувати</Text>
 					</TouchableOpacity>
 					<TouchableOpacity onPress={handleClear} style={styles.trashContainer}>
-						<TrashIcon style={styles.trashIcon }/>
+						<TrashIcon style={styles.trashIcon} />
 					</TouchableOpacity>
 				</View>
 			</KeyboardAvoidingView>
 		</TouchableWithoutFeedback>
 	);
 };
-
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,

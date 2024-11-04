@@ -15,43 +15,115 @@ import {
 	ScrollView
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import CommentIcon from "@/icons/CommentIcon";
-import LocationIcon from "@/icons/LocationIcon";
-import LikeIcon from "@/icons/LikeIcon";
-import CommentOrangeIcon from "@/icons/CommentOrangeIcon";
-import CloseIcon from "@/icons/closeIcon";
-import LogoutIcon from "@/icons/LogOutIcon";
+import { useDispatch, useSelector } from "react-redux";
+
+import CommentIcon from "../icons/CommentIcon";
+import LocationIcon from "../icons/LocationIcon";
+import LikeIcon from "../icons/LikeIcon";
+import CommentOrangeIcon from "../icons/CommentOrangeIcon";
+import CloseIcon from "../icons/closeIcon";
+import LogoutIcon from "../icons/LogOutIcon";
+import { RootState } from "../redux/store/store";
+import { db } from '../newConfig';
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { getImageUrl, updateUserInFirestore, uploadImage } from "../utils/firestore";
+import { setUserInfo } from "../redux/reducers/useSlice";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("screen");
 
 const ProfileScreen = () => {
 	const [profileImage, setProfileImage] = useState<string | null>(null);
 	const [buttonRotation, setButtonRotation] = useState(new Animated.Value(0));
+	const userInfo = useSelector((state: RootState) => state.user.userInfo);
+	const [userName, setUserName] = useState<string>(userInfo?.displayName || '')
+	const [userPosts, setUserPosts] = useState([]);
+	const userId = userInfo?.uid;
+	const dispatch = useDispatch();
 
-	const posts = [
-		{
-			image: require("../assets/images/sunset.jpeg"),  
-			likes: 10,
-			comments: 0,
-			location: 'Ukraine'
-		},
-		{
-			image: require("../assets/images/forest.jpeg"),
-			likes: 5,
-			comments: 5,
-			location: 'Ukraine'
-		},
-		{
-			image: require("../assets/images/sunset.jpeg"),
-			likes: 10,
-			comments: 0,
-			location: 'Ukraine'
-		},
-	];
+
+	useEffect(() => {
+		const loadUserPosts = async () => {
+			if (userId) {
+				const posts = await fetchUserPosts(userId);
+				setUserPosts(posts);
+			}
+		};
+
+		loadUserPosts();
+	}, [userId]);
+
+	const fetchUserPosts = async (userId: string) => {
+		const postsCollection = collection(db, "posts");
+		const q = query(postsCollection, where("userId", "==", userId));
+		const querySnapshot = await getDocs(q);
+
+		const userPosts = querySnapshot.docs.map(doc => ({
+			id: doc.id,
+			...doc.data(),
+		}));
+
+		return userPosts;
+	};
+
+	// const posts = [
+	// 	{
+	// 		image: require("../assets/images/sunset.jpeg"),
+	// 		likes: 10,
+	// 		comments: 0,
+	// 		location: 'Ukraine'
+	// 	},
+	// 	{
+	// 		image: require("../assets/images/forest.jpeg"),
+	// 		likes: 5,
+	// 		comments: 5,
+	// 		location: 'Ukraine'
+	// 	},
+	// 	{
+	// 		image: require("../assets/images/sunset.jpeg"),
+	// 		likes: 10,
+	// 		comments: 0,
+	// 		location: 'Ukraine'
+	// 	},
+	// ];
 
 	const dismissKeyboard = () => {
 		Keyboard.dismiss();
 	};
+
+	// Завантаження зображення та отримання URL
+	const handleImageUpload = async (
+		userId: string,
+		file: File | Blob,
+		fileName: string,
+	) => {
+		try {
+			console.log('FILE', file)
+			// Завантажуємо зображення
+			const imageRef = await uploadImage(userId, file, fileName);
+
+			// // Отримуємо URL завантаженого зображення
+			const imageUrl = await getImageUrl(imageRef);
+
+			console.log('Image URL:', imageUrl);
+			return imageUrl;
+		} catch (error) {
+			console.error('Error uploading image and getting URL:', error);
+		}
+	};
+
+	const onUserNameChange = async () => {
+		if (!userInfo) return;
+
+		try {
+			await updateUserInFirestore(userInfo?.uid, {
+				displayName: userName,
+			});
+
+			dispatch(setUserInfo({ ...userInfo, displayName: userName }))
+		} catch (error) {
+			console.log(error);
+		}
+	}
 
 	const selectImage = async () => {
 		const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -68,9 +140,31 @@ const ProfileScreen = () => {
 			quality: 1,
 		});
 
-		if (!result.canceled && result.assets && result.assets.length > 0) {
-			setProfileImage(result.assets[0].uri);
+		if (!result.canceled && result.assets && result.assets.length > 0 && userInfo) {
+			const uri = result.assets[0].uri
+			setProfileImage(uri);
 			rotateButton();
+
+			const response = await fetch(uri);
+			const file = await response.blob();
+
+			// // Перетворюємо Blob на File, якщо це необхідно
+			const fileName = uri.split('/').pop() || "123"; // Отримуємо ім'я файлу з URI
+			const fileType = file.type; // Отримуємо тип файлу
+
+			console.log('FILE NAME', fileName)
+
+			const imageFile = new File([file], fileName, { type: fileType });
+
+			// // Завантажуємо зображення
+			const imageUrl = await handleImageUpload(userInfo.uid, imageFile, fileName);
+
+			await updateUserInFirestore(userInfo.uid, { profileImage: imageUrl })
+
+			dispatch(setUserInfo({
+				...userInfo,
+				profileImage: imageUrl,
+			}));
 		}
 	};
 
@@ -101,10 +195,17 @@ const ProfileScreen = () => {
 				>
 					<View style={styles.formContainer}>
 						<View style={styles.profileImageContainer}>
-							<Image
-								source={require("../assets/images/avatar.jpg")}
-								style={styles.profileImage}
-							/>
+							{userInfo?.profileImage ? (
+								<Image
+									source={{ uri: profileImage }}
+									style={styles.profileImage}
+								/>
+							) : (
+								<Image
+									source={require("../assets/images/avatar.jpg")}
+									style={styles.profileImage}
+								/>
+							)}
 							<TouchableOpacity
 								style={[
 									styles.addButton,
@@ -114,20 +215,17 @@ const ProfileScreen = () => {
 								]}
 								onPress={profileImage ? removeImage : selectImage}
 							>
-								<CloseIcon/>
-			
+								<CloseIcon />
+
 							</TouchableOpacity>
 						</View>
-						<LogoutIcon style={styles.logoutBtn}/>
+						<LogoutIcon style={styles.logoutBtn} />
 						<Text style={styles.profileName}>Natali Romanova</Text>
 
-						{posts.map((post, index) => (
-							<View key={index} style={styles.PostContainer}>
-								<Image
-									source={post.image}
-									style={styles.postImage}
-								/>
-								<Text style={styles.postName}>Захід сонця</Text>
+						{userPosts && userPosts.map((post) => (
+							<View key={post.id} style={styles.post}>
+								<Text style={styles.postTitle}>{post.name}</Text>
+								<Image source={{ uri: post.capturedImage }} style={styles.postImage} />
 
 								<View style={styles.postDetails}>
 									<View style={styles.leftContainer}>
@@ -258,7 +356,7 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		alignItems: 'center',
 	},
-	likesContainer:{
+	likesContainer: {
 		flexDirection: 'row',
 		alignItems: 'center',
 		marginLeft: 24
@@ -273,7 +371,7 @@ const styles = StyleSheet.create({
 		fontWeight: "400",
 		textDecorationLine: 'underline',
 	},
-	leftContainer:{
+	leftContainer: {
 		flexDirection: 'row',
 	},
 });

@@ -2,15 +2,17 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { View, StyleSheet } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import MapScreen from "../Screens/MapScreen";
-import HomeScreen from "@/Screens/HomeScreen";
-import CameraScreen from "@/Screens/CameraScreen";
-import CommentsScreen from "@/Screens/CommentsScreen";
-import CreatePostsScreen from "@/Screens/CreatePostsScreen";
-import LogoutIcon from "@/icons/LogOutIcon";
-import BlocksIcon from "@/icons/BlocksIcon";
-import UserIcon from "@/icons/UserIcon";
+import HomeScreen from "../Screens/HomeScreen";
+import CommentsScreen from "../Screens/CommentsScreen";
+import CreatePostsScreen from "../Screens/CreatePostsScreen";
+import BlocksIcon from "../icons/BlocksIcon";
+import UserIcon from "../icons/UserIcon";
 import BackButton from "../components/BackButton";
-import PfofileScreen from "@/Screens/ProfileScreen";
+import ProfileScreen from "../Screens/ProfileScreen";
+import { TouchableOpacity } from "react-native-gesture-handler";
+import { logoutDB } from "../utils/auth";
+import { useDispatch } from "react-redux";
+import LogoutButton from "../components/LogoutButton";
 
 type BottomTabParamList = {
 	Home: undefined;
@@ -24,6 +26,8 @@ type BottomTabParamList = {
 const Tab = createBottomTabNavigator<BottomTabParamList>();
 
 const BottomTabNavigator = () => {
+	  const dispatch = useDispatch();
+
 	return (
 		<Tab.Navigator
 			initialRouteName="Home"
@@ -45,7 +49,11 @@ const BottomTabNavigator = () => {
 				component={HomeScreen}
 				options={{
 					title: "Публікації",
-					headerRight: () => <LogoutIcon />,
+					headerRight: () => (
+						<LogoutButton
+						onPress={() => logoutDB(dispatch)}
+						/>
+					),
 					headerLeft: () => null, 
 					tabBarIcon: ({ focused }) => (
 						<View >
@@ -76,7 +84,7 @@ const BottomTabNavigator = () => {
 
 			<Tab.Screen
 				name="Profile"
-				component={PfofileScreen}
+				component={ProfileScreen}
 				options={{
 					title: "Profile",
 					headerShown: false,

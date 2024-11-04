@@ -1,11 +1,13 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
+    "baseUrl": "./src", 
     "strict": true,
     "paths": {
       "@/*": [
         "./*"
-      ]
+      ],
+      "@config": ["path/to/config"]
     }
   },
   "include": [
@@ -14,6 +16,6 @@
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
     "types/**/*", 
-    "src/**/*", 
+    "src/**/*", "redux/store/rootReducer.tsx=", "newCongig.js", "app/index.js", "redux/reducers/commentsSlice.js", 
   ]
 }

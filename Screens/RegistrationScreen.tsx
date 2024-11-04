@@ -16,7 +16,7 @@ import * as ImagePicker from "expo-image-picker";
 import { colors } from "../styles/global";
 import { NativeStackScreenProps } from "react-native-screens/lib/typescript/native-stack/types";
 import { StackParamList } from "../navigation/StackNavigator";
-import Input from "../components/Input";
+import { registerDB } from "../utils/auth";
 
 type HomeScreenProps = NativeStackScreenProps<StackParamList, 'Signup'>;
 
@@ -34,10 +34,12 @@ type HomeScreenProps = NativeStackScreenProps<StackParamList, 'Signup'>;
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [hasError, setHasError] = useState(false); 
+
   const onSignUp = () => {
-    console.log("Username:", username);
-    console.log("Email:", email);
-    console.log("Password:", password);
+    console.log('Sign up!');
+    console.log('email', email);
+
+    registerDB({ email, password })
 
     setUsername("");
     setEmail("");
@@ -136,6 +138,11 @@ type HomeScreenProps = NativeStackScreenProps<StackParamList, 'Signup'>;
     navigation.navigate('Login');
   };
 
+  const onEmailSave = (value: string) => {
+    setEmail(value);  
+    console.log(value, 'email here');  
+  };
+
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <View style={{ flex: 1 }}>
@@ -207,9 +214,10 @@ type HomeScreenProps = NativeStackScreenProps<StackParamList, 'Signup'>;
               placeholderTextColor="#BDBDBD"
               onFocus={onEmailFocus}
               onBlur={onEmailBlur}
-              onChangeText={setEmail}
+              onChangeText={onEmailSave}
               value={email}
             />
+
             <View style={styles.passwordContainer}>
               <TextInput
                 style={[

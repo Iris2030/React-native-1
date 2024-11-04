@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     Dimensions,
     Image,
@@ -8,14 +8,54 @@ import {
     TouchableWithoutFeedback,
     View,
     ScrollView,
-    TouchableOpacity
+    TouchableOpacity,
+    Text,
 } from "react-native";
 import { colors } from "../styles/global";
-import UpArrowIcon from "@/icons/UpArrowIcon";
+import { useDispatch, useSelector } from 'react-redux';
+import { addComment, setComments } from '../redux/reducers/commentsSlice';  
+import { collection, getDocs, addDoc } from "firebase/firestore"; 
+import { db } from '../newConfig'; 
+import UpArrowIcon from "../icons/UpArrowIcon";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("screen");
 
-const CommentsScreen = () => {
+const CommentsScreen = ({ route }) => {
+    const dispatch = useDispatch();
+    const { postId } = route.params; // Get postId from route params
+    const comments = useSelector((state) => state.comments[postId] || []);
+    const [commentText, setCommentText] = useState("");
+
+    useEffect(() => {
+        const fetchComments = async () => {
+            // Get the comments collection for the specific post
+            const commentsCollectionRef = collection(db, 'posts', postId, 'comments');
+            const commentsSnapshot = await getDocs(commentsCollectionRef);
+            const fetchedComments = commentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            dispatch(setComments({ postId, comments: fetchedComments }));
+        };
+
+        fetchComments();
+    }, [postId, dispatch]);
+
+    const handleCommentSubmit = async () => {
+        if (commentText.trim() === "") return;
+
+        const newComment = {
+            text: commentText,
+            createdAt: new Date(),
+        };
+
+        // Save comment to Firestore
+        const commentsCollectionRef = collection(db, 'posts', postId, 'comments');
+        await addDoc(commentsCollectionRef, newComment);
+
+        // Dispatch the action to update Redux state
+        dispatch(addComment({ postId, comment: newComment }));
+
+        // Clear input field
+        setCommentText("");
+    };
     return (
         <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
             <ScrollView

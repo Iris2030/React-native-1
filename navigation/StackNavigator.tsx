@@ -1,5 +1,7 @@
 import { createStackNavigator } from "@react-navigation/stack";
 import { NativeStackScreenProps } from "@react-navigation/native-stack"; 
+import { useSelector } from "react-redux";
+import { RootState } from "../redux/store/store";
 
 import LoginScreen from "../Screens/LoginScreen";
 import SignupScreen from "../Screens/RegistrationScreen";
@@ -14,6 +16,8 @@ export type StackParamList = {
 const Stack = createStackNavigator<StackParamList>();  
 
 const StackNavigator = () => {
+  const user = useSelector((state: RootState) => state.user.userInfo);
+
   return (
     <Stack.Navigator
       initialRouteName="Login"
@@ -21,11 +25,19 @@ const StackNavigator = () => {
         headerShown: false,
       }}
     >
-      <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="Signup" component={SignupScreen} />
-      <Stack.Screen name="Home" component={BottomTabNavigator} />
+      {user ? (
+        // Якщо користувач залогінений, показуємо головний екран
+        <Stack.Screen name="Home" component={BottomTabNavigator} />
+      ) : (
+        // Якщо користувач не залогінений, показуємо екрани Login та Signup
+        <>
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Signup" component={SignupScreen} />
+        </>
+      )}
     </Stack.Navigator>
   );
 };
+
 
 export default StackNavigator;

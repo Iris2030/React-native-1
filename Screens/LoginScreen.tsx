@@ -6,6 +6,8 @@ import Button from "../components/Button";
 import { useFocusEffect, useIsFocused } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { StackParamList } from "../navigation/StackNavigator";
+import { loginDB } from "../utils/auth";
+import { useDispatch, useSelector } from "react-redux";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("screen");
 
@@ -20,6 +22,7 @@ const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
   const [isEmailWrongs, setIsEmailWrongs] = useState(false); 
   const [isPasswordWrongs, setIsPasswordWrongs] = useState(false); 
 
+  const dispatch = useDispatch();
 
   const validateEmail = (email: string) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -62,20 +65,29 @@ const LoginScreen: FC<LoginScreenProps> = ({ navigation }) => {
     setIsPasswordVisible(prev => !prev);
   };
 
-  const onLogin = () => {
-    if (validateEmail(email) && password) {
+const onLogin = async () => {
+  if (validateEmail(email) && password) {
+    try {
+      console.log(email,'email');
+      console.log(password,'password');
+
+      await loginDB({ email, password }, dispatch);
+      // Only navigate to 'Home' after a successful login
       navigation.navigate('Home');
-    } else {
-      if (!validateEmail(email)) {
-        setEmailError('Невірний формат електронної пошти');
-        setIsEmailWrongs(true)
-      }
-      if (!password) {
-        setPasswordError('Пароль не може бути пустим');
-        setIsPasswordWrongs(true)
-      }
+    } catch (err) {
+      console.error('Login error:', err); // Log errors if login fails
     }
-  };
+  } else {
+    if (!validateEmail(email)) {
+      setEmailError('Невірний формат електронної пошти');
+      setIsEmailWrongs(true);
+    }
+    if (!password) {
+      setPasswordError('Пароль не може бути пустим');
+      setIsPasswordWrongs(true);
+    }
+  }
+};
 
   const onSignUp = () => {
     navigation.navigate("Signup", { userEmail: email });

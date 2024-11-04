@@ -1,5 +1,6 @@
 {
   "expo": {
+    "entryPoint": "./App.tsx",
     "name": "MyNewProject",
     "slug": "MyNewProject",
     "version": "1.0.0",
@@ -42,7 +43,8 @@
           "apiKey": "AIzaSyCw5RG5hV0guHJOEenpb6afKt2MGSZB_Tw"
         }
       },
-      "package": "com.anonymous.MyNewProject"
+      "package": "com.anonymous.MyNewProject",
+      "hermes": true
     },
     "web": {
       "bundler": "metro",
