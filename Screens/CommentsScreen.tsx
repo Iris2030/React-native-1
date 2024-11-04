@@ -23,29 +23,33 @@ const { width: SCREEN_WIDTH } = Dimensions.get("screen");
 
 const CommentsScreen = ({ route }) => {
     const dispatch = useDispatch();
-    const { postId, postImage } = route.params;  
+    const { postId, postImage } = route.params;
     const comments = useSelector(selectCommentsByPostId(postId));
     const [commentText, setCommentText] = useState("");
 
     const fetchComments = async () => {
-        const commentsRef = collection(doc(db, 'posts', postId), 'comments'); 
-        const commentsSnapshot = await getDocs(commentsRef); 
+        const commentsRef = collection(doc(db, 'posts', postId), 'comments');
+        const commentsSnapshot = await getDocs(commentsRef);
         const fetchedComments = commentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         dispatch(setComments({ postId, comments: fetchedComments }));
     };
 
+    useEffect(() => {
+        fetchComments();
+    }, [postId]);
+
     const handleCommentSubmit = async () => {
         if (commentText.trim() === "") return;
-    
+
         const newComment = {
             text: commentText,
-            createdAt: new Date().toISOString(),  
+            createdAt: new Date().toISOString(),
         };
-    
+
         const commentsRef = collection(doc(db, 'posts', postId), 'comments');
-    
+
         await addDoc(commentsRef, newComment);
-    
+
         dispatch(addComment({ postId, comment: newComment }));
 
         setCommentText("");
@@ -53,23 +57,15 @@ const CommentsScreen = ({ route }) => {
 
     return (
         <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
-            <ScrollView
-                style={styles.container}
-                contentContainerStyle={styles.contentContainer}
-            >
+            <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
                 <View style={styles.PostContainer}>
-                    <Image
-                        source={{ uri: postImage }}
-                        style={styles.postImage}
-                    />
+                    <Image source={{ uri: postImage }} style={styles.postImage} />
                 </View>
-                <ScrollView>
-                    {comments.map(comment => (
-                        <View key={`${postId}-${comment.id}`} style={styles.commentContainer}>
-                            <Text>{comment.text}</Text>
-                        </View>
-                    ))}
-                </ScrollView>
+                {comments.map(comment => (
+                    <View key={`${postId}-${comment.id}`} style={styles.commentContainer}>
+                        <Text>{comment.text}</Text>
+                    </View>
+                ))}
                 <View style={styles.inputContainer}>
                     <TextInput
                         style={styles.input}
@@ -77,16 +73,11 @@ const CommentsScreen = ({ route }) => {
                         placeholderTextColor="#BDBDBD"
                         onChangeText={setCommentText}
                         value={commentText}
-                    // value={ }
                     />
-                    <TouchableOpacity
-                        style={styles.photoCircle}
-                        onPress={handleCommentSubmit}
-                    >
+                    <TouchableOpacity style={styles.photoCircle} onPress={handleCommentSubmit}>
                         <UpArrowIcon />
                     </TouchableOpacity>
                 </View>
-
             </ScrollView>
         </TouchableWithoutFeedback>
     );
