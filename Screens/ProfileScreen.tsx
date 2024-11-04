@@ -64,8 +64,6 @@ const ProfileScreen = () => {
 
 		return userPosts;
 	};
-
-	// const posts = [
 	// 	{
 	// 		image: require("../assets/images/sunset.jpeg"),
 	// 		likes: 10,
@@ -90,7 +88,6 @@ const ProfileScreen = () => {
 		Keyboard.dismiss();
 	};
 
-	// Завантаження зображення та отримання URL
 	const handleImageUpload = async (
 		userId: string,
 		file: File | Blob,
@@ -98,10 +95,8 @@ const ProfileScreen = () => {
 	) => {
 		try {
 			console.log('FILE', file)
-			// Завантажуємо зображення
 			const imageRef = await uploadImage(userId, file, fileName);
 
-			// // Отримуємо URL завантаженого зображення
 			const imageUrl = await getImageUrl(imageRef);
 
 			console.log('Image URL:', imageUrl);
@@ -111,19 +106,19 @@ const ProfileScreen = () => {
 		}
 	};
 
-	const onUserNameChange = async () => {
-		if (!userInfo) return;
+	// const onUserNameChange = async () => {
+	// 	if (!userInfo) return;
 
-		try {
-			await updateUserInFirestore(userInfo?.uid, {
-				displayName: userName,
-			});
+	// 	try {
+	// 		await updateUserInFirestore(userInfo?.uid, {
+	// 			displayName: userName,
+	// 		});
 
-			dispatch(setUserInfo({ ...userInfo, displayName: userName }))
-		} catch (error) {
-			console.log(error);
-		}
-	}
+	// 		dispatch(setUserInfo({ ...userInfo, displayName: userName }))
+	// 	} catch (error) {
+	// 		console.log(error);
+	// 	}
+	// }
 
 	const selectImage = async () => {
 		const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -148,15 +143,13 @@ const ProfileScreen = () => {
 			const response = await fetch(uri);
 			const file = await response.blob();
 
-			// // Перетворюємо Blob на File, якщо це необхідно
-			const fileName = uri.split('/').pop() || "123"; // Отримуємо ім'я файлу з URI
-			const fileType = file.type; // Отримуємо тип файлу
-
+			const fileName = uri.split('/').pop() || "123";  
+			const fileType = file.type;  
+			
 			console.log('FILE NAME', fileName)
 
 			const imageFile = new File([file], fileName, { type: fileType });
 
-			// // Завантажуємо зображення
 			const imageUrl = await handleImageUpload(userInfo.uid, imageFile, fileName);
 
 			await updateUserInFirestore(userInfo.uid, { profileImage: imageUrl })

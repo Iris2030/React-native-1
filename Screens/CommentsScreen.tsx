@@ -13,72 +13,75 @@ import {
 } from "react-native";
 import { colors } from "../styles/global";
 import { useDispatch, useSelector } from 'react-redux';
-import { addComment, setComments } from '../redux/reducers/commentsSlice';  
-import { collection, getDocs, addDoc } from "firebase/firestore"; 
-import { db } from '../newConfig'; 
+import { addComment, setComments } from '../redux/reducers/commentsSlice';
+import { doc, collection, getDocs, addDoc } from "firebase/firestore";
+import { db } from '../newConfig';
 import UpArrowIcon from "../icons/UpArrowIcon";
+import { selectCommentsByPostId } from '../redux/reducers/commentsSlice';
 
 const { width: SCREEN_WIDTH } = Dimensions.get("screen");
 
 const CommentsScreen = ({ route }) => {
     const dispatch = useDispatch();
-    const { postId } = route.params; // Get postId from route params
-    const comments = useSelector((state) => state.comments[postId] || []);
+    const { postId, postImage } = route.params;  
+    const comments = useSelector(selectCommentsByPostId(postId));
     const [commentText, setCommentText] = useState("");
 
-    useEffect(() => {
-        const fetchComments = async () => {
-            // Get the comments collection for the specific post
-            const commentsCollectionRef = collection(db, 'posts', postId, 'comments');
-            const commentsSnapshot = await getDocs(commentsCollectionRef);
-            const fetchedComments = commentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            dispatch(setComments({ postId, comments: fetchedComments }));
-        };
-
-        fetchComments();
-    }, [postId, dispatch]);
+    const fetchComments = async () => {
+        const commentsRef = collection(doc(db, 'posts', postId), 'comments'); 
+        const commentsSnapshot = await getDocs(commentsRef); 
+        const fetchedComments = commentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        dispatch(setComments({ postId, comments: fetchedComments }));
+    };
 
     const handleCommentSubmit = async () => {
         if (commentText.trim() === "") return;
-
+    
         const newComment = {
             text: commentText,
-            createdAt: new Date(),
+            createdAt: new Date().toISOString(),  
         };
-
-        // Save comment to Firestore
-        const commentsCollectionRef = collection(db, 'posts', postId, 'comments');
-        await addDoc(commentsCollectionRef, newComment);
-
-        // Dispatch the action to update Redux state
+    
+        const commentsRef = collection(doc(db, 'posts', postId), 'comments');
+    
+        await addDoc(commentsRef, newComment);
+    
         dispatch(addComment({ postId, comment: newComment }));
 
-        // Clear input field
         setCommentText("");
     };
+
     return (
         <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
             <ScrollView
                 style={styles.container}
                 contentContainerStyle={styles.contentContainer}
             >
-
                 <View style={styles.PostContainer}>
                     <Image
-                        source={require("../assets/images/forest.jpeg")}
+                        source={{ uri: postImage }}
                         style={styles.postImage}
                     />
                 </View>
-
+                <ScrollView>
+                    {comments.map(comment => (
+                        <View key={`${postId}-${comment.id}`} style={styles.commentContainer}>
+                            <Text>{comment.text}</Text>
+                        </View>
+                    ))}
+                </ScrollView>
                 <View style={styles.inputContainer}>
                     <TextInput
                         style={styles.input}
                         placeholder="Коментувати..."
                         placeholderTextColor="#BDBDBD"
+                        onChangeText={setCommentText}
+                        value={commentText}
                     // value={ }
                     />
                     <TouchableOpacity
                         style={styles.photoCircle}
+                        onPress={handleCommentSubmit}
                     >
                         <UpArrowIcon />
                     </TouchableOpacity>
@@ -144,6 +147,9 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 0,
         left: 16,
+    },
+    commentContainer: {
+        width: SCREEN_WIDTH - 32,
     }
 
 });

@@ -16,32 +16,31 @@ import LocationIcon from "../icons/LocationIcon";
 import CommentOrangeIcon from "../icons/CommentOrangeIcon";
 import { db } from '../newConfig'; 
 import { collection, getDocs } from "firebase/firestore"; 
+import { useNavigation } from '@react-navigation/native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get("screen");
-import { useNavigation } from '@react-navigation/native';
 
 const PostsScreen: FC = () => {
     const navigation = useNavigation();
     const [posts, setPosts] = useState<any[]>([]);  
     
-    // Function to fetch posts from Firestore
     const fetchPosts = async () => {
         try {
-            const postsCollection = collection(db, "posts"); // Reference to your posts collection
-            const snapshot = await getDocs(postsCollection); // Fetch documents
-            const fetchedPosts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); // Map documents to post objects
-            setPosts(fetchedPosts); // Update state with fetched posts
+            const postsCollection = collection(db, "posts");  
+            const snapshot = await getDocs(postsCollection);  
+            const fetchedPosts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); 
+            setPosts(fetchedPosts); 
         } catch (error) {
             console.error("Error fetching posts: ", error);
         }
     };
 
     useEffect(() => {
-        fetchPosts(); // Call the fetch function on component mount
+        fetchPosts();  
     }, []);
 
-    const goToComments = () => {
-        navigation.navigate('Comments');
+    const goToComments = (postId: string, postImage: string) => {
+        navigation.navigate('Comments', { postId, postImage });  
     };
 
     const goToMap = (location: string) => {
@@ -66,16 +65,19 @@ const PostsScreen: FC = () => {
                     </View>
                 </View>
 
-                {posts.map((post, index) => (
+                {posts.map((post) => (
                     <View key={post.id} style={styles.PostContainer}>
                         <Image
-                            source={{ uri: post.capturedImage }} // Assuming capturedImage is a URL
+                            source={{ uri: post.capturedImage }} 
                             style={styles.postImage}
                         />
                         <Text style={styles.postName}>{post.name}</Text>
 
                         <View style={styles.postDetails}>
-                            <TouchableOpacity style={styles.commentsContainer} onPress={goToComments}>
+                            <TouchableOpacity 
+                                style={styles.commentsContainer} 
+                                onPress={() => goToComments(post.id, post.capturedImage)}  
+                            >
                                 {post.comments ? <CommentOrangeIcon /> : <CommentIcon />}
                                 <Text style={[styles.postComments, {
                                     color: post.comments ? '#212121' : '#BDBDBD'

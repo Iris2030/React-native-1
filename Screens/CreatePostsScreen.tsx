@@ -42,7 +42,7 @@ const CreatePostsScreen: FC = () => {
 	const userInfo = useSelector((state: RootState) => state.user.userInfo);
 
 	const camera = useRef();
-	const dispatch = useDispatch();  // Initialize Redux dispatch
+	const dispatch = useDispatch(); 
 	const navigation = useNavigation();
 
 	useEffect(() => {
@@ -107,7 +107,6 @@ const CreatePostsScreen: FC = () => {
 		if (location) {
 			const { latitude, longitude } = location.coords;
 	
-			// Reverse geocode to get the address
 			let reverseGeocode = await Location.reverseGeocodeAsync({
 				latitude,
 				longitude,
@@ -130,14 +129,11 @@ const CreatePostsScreen: FC = () => {
 				};
 	
 				try {
-					// Use createPost to save the post data
 					await createPost(userInfo.uid, postData);  
 					console.log("Post successfully created!");
 	
-					// Dispatch the post data to Redux
-					dispatch(addPost(postData));  // Make sure the addPost action is imported
+					dispatch(addPost(postData)); 
 	
-					// Navigate back to the home screen or a success screen
 					navigation.navigate('Home');
 				} catch (error) {
 					console.error("Error creating post: ", error);
